@@ -1,0 +1,27 @@
+# Node dependencies
+client/node_modules/
+server/node_modules/
+
+# Environment variables (only server holds secrets)
+server/.env
+
+# Logs
+*.log
+logs/
+client/logs/
+server/logs/
+lambda/logs/
+
+# Build artifacts (optional, adjust if needed)
+client/dist/
+server/dist/
+lambda/dist/
+client/build/
+server/build/
+lambda/build/
+
+# OS + Editor cruft
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
