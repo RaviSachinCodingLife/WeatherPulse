@@ -5,6 +5,7 @@ import App from './App';
 import { store } from './store/store';
 import 'leaflet/dist/leaflet.css';
 import "leaflet/dist/leaflet.css";
+import "../src/index.css"
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

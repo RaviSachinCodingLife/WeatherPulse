@@ -1,38 +1,35 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-export type AlertItem = {
+export interface Alert {
   id: string;
-  type: "storm" | "earthquake" | "flood" | "generic";
+  type: string;
   title: string;
-  description?: string;
+  description: string;
   coords?: [number, number];
   severity?: number;
   timestamp: string;
+}
+
+interface AlertsState {
+  items: Alert[];
+}
+
+const initialState: AlertsState = {
+  items: [],
 };
 
-type AlertsState = {
-  items: AlertItem[];
-};
-
-const initialState: AlertsState = { items: [] };
-
-const alertsSlice = createSlice({
+export const alertsSlice = createSlice({
   name: "alerts",
   initialState,
   reducers: {
-    addAlert(state, action: PayloadAction<AlertItem>) {
-      state.items.unshift(action.payload);
-      // keep list reasonably sized
-      if (state.items.length > 500) state.items.pop();
-    },
-    setAlerts(state, action: PayloadAction<AlertItem[]>) {
+    setAlerts: (state, action: PayloadAction<Alert[]>) => {
       state.items = action.payload;
     },
-    clearAlerts(state) {
-      state.items = [];
+    addAlert: (state, action: PayloadAction<Alert>) => {
+      state.items.push(action.payload);
     },
   },
 });
 
-export const { addAlert, setAlerts, clearAlerts } = alertsSlice.actions;
+export const { addAlert, setAlerts } = alertsSlice.actions;
 export default alertsSlice.reducer;
