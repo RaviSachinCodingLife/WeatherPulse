@@ -10,7 +10,24 @@ const useAlerts = () => {
       try {
         const res = await fetch("http://localhost:4000/api/alerts");
         const data = await res.json();
-        dispatch(setAlerts(data)); 
+
+        const uniqueAlertsMap = new Map<string, (typeof data)[0]>();
+        data.forEach((alert: any) => {
+          if (alert.id) uniqueAlertsMap.set(alert.id, alert);
+        });
+
+        const uniqueAlerts = Array.from(uniqueAlertsMap.values());
+
+        uniqueAlerts.forEach((alert) => {
+          if (alert.location?.coordinates) {
+            alert.coords = [
+              alert.location.coordinates[1],
+              alert.location.coordinates[0],
+            ];
+          }
+        });
+
+        dispatch(setAlerts(uniqueAlerts));
       } catch (err) {
         console.error("Failed to fetch initial alerts", err);
       }
@@ -24,13 +41,22 @@ const useAlerts = () => {
 
     evtSource.onmessage = (event) => {
       const alert = JSON.parse(event.data);
+
       if (alert.location?.coordinates) {
         alert.coords = [
           alert.location.coordinates[1],
           alert.location.coordinates[0],
         ];
       }
-      dispatch(addAlert(alert));
+
+      dispatch((dispatch, getState) => {
+        const existingIds = new Set(
+          getState().alerts.items.map((a: any) => a.id)
+        );
+        if (!existingIds.has(alert.id)) {
+          dispatch(addAlert(alert));
+        }
+      });
     };
 
     return () => evtSource.close();

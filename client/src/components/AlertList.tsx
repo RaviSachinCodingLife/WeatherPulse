@@ -13,35 +13,45 @@ const alertIcons: Record<string, JSX.Element> = {
   drought: <GrainIcon style={{ color: "#d35400" }} />,
 };
 
-const getBorderColor = (type: string) => {
-  switch (type) {
-    case "storm":
-      return "#f1c40f";
-    case "flood":
-      return "#3498db";
-    case "earthquake":
-      return "#e74c3c";
-    case "drought":
-      return "#d35400";
-    default:
-      return "#95a5a6";
-  }
-};
-
 const AlertList: React.FC = () => {
   const alerts = useAppSelector((s) => s.alerts.items);
 
-  // Memoize rendered alerts for performance
-  const renderedAlerts = useMemo(
-    () =>
-      alerts.map((alert) => (
+  const uniqueAlerts = useMemo(() => {
+    const seen = new Set<string>();
+    return alerts.filter((a) => {
+      if (seen.has(a.id)) return false;
+      seen.add(a.id);
+      return true;
+    });
+  }, [alerts]);
+  return (
+    <Box
+      sx={{
+        width: "100%",
+        maxHeight: "90vh",
+        overflowY: "auto",
+        backdropFilter: "blur(10px)",
+        background: "rgba(0,0,0,0.3)",
+        borderRadius: 3,
+        p: 2,
+      }}
+    >
+      {uniqueAlerts.map((alert) => (
         <Card
           key={alert.id}
           sx={{
             mb: 2,
             borderRadius: 3,
             background: "rgba(255,255,255,0.1)",
-            borderLeft: `5px solid ${getBorderColor(alert.type)}`,
+            borderLeft: `5px solid ${
+              alert.type === "storm"
+                ? "#f1c40f"
+                : alert.type === "flood"
+                ? "#3498db"
+                : alert.type === "earthquake"
+                ? "#e74c3c"
+                : "#d35400"
+            }`,
             color: "#fff",
           }}
         >
@@ -58,23 +68,7 @@ const AlertList: React.FC = () => {
             </Typography>
           </CardContent>
         </Card>
-      )),
-    [alerts]
-  );
-
-  return (
-    <Box
-      sx={{
-        width: "100%",
-        maxHeight: "90vh",
-        overflowY: "auto",
-        backdropFilter: "blur(10px)",
-        background: "rgba(0,0,0,0.3)",
-        borderRadius: 3,
-        p: 2,
-      }}
-    >
-      {renderedAlerts}
+      ))}
     </Box>
   );
 };

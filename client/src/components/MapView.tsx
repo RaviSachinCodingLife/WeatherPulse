@@ -4,14 +4,7 @@ import { useAppSelector } from "../hooks/reduxHooks";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import useAlerts from "../hooks/useAlerts";
-
-interface Alert {
-  id: string;
-  type: string;
-  title: string;
-  coords?: [number, number];
-  severity?: number;
-}
+import type { Alert } from "../store/slices/alertsSlice";
 
 const getIcon = (type: string, severity?: number) => {
   const size = 32 + (severity ? severity * 2 : 0);
@@ -25,7 +18,6 @@ const getIcon = (type: string, severity?: number) => {
     html: `<div style="font-size:${size}px;color:${
       colorMap[type] || "#95a5a6"
     }">⚠️</div>`,
-    className: "", // remove default leaflet styles
   });
 };
 
@@ -33,16 +25,12 @@ const MapView: React.FC = () => {
   useAlerts();
   const alerts = useAppSelector((s) => s.alerts.items);
 
-  // Memoize latest alert per state to avoid duplicates
-  const latestPerState = useMemo(() => {
-    const map = new Map<string, Alert>();
-    alerts.forEach((a) => {
-      if (a.coords) {
-        map.set(a.title, a); // only keep the latest alert per state
-      }
-    });
-    return [...map.values()];
-  }, [alerts]);
+  const latestPerState = new Map<string, (typeof alerts)[0]>();
+  alerts.forEach((a) => {
+    if (a.coords) {
+      latestPerState.set(a.title, a);
+    }
+  });
 
   return (
     <MapContainer
@@ -51,9 +39,9 @@ const MapView: React.FC = () => {
       style={{ height: "100vh", width: "100%" }}
     >
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      {latestPerState.map((alert) => (
+      {[...latestPerState.values()].map((alert) => (
         <Marker
-          key={alert.id}
+          key={`${alert.id}-${alert.timestamp}`}
           position={alert.coords as [number, number]}
           icon={getIcon(alert.type, alert.severity)}
         />
