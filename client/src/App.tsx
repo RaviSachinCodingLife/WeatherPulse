@@ -1,30 +1,32 @@
-import React from "react";
-import { Grid, Card, Typography, Box } from "@mui/material";
-import IndiaMap from "./components/MapView";
-import AlertList from "./components/AlertList";
-import WeatherWidget from "./components/WeatherWidget";
-import { useAppSelector } from "./hooks/reduxHooks";
-import { useWebSocket } from "./hooks/useWebSocket";
-const App: React.FC = () => {
-  useWebSocket();
-  const alerts = useAppSelector((s) => s.alerts.items);
-  console.log({ alerts });
+import { Suspense } from "react";
+import { Routes, Route } from "react-router-dom";
+import { CircularProgress, Box } from "@mui/material";
+import { routes } from "./routes/route";
+
+const App = () => {
   return (
-    <Box sx={{ height: "100vh", width: "100vw", bgcolor: "grey.900" }}>
-      <Typography variant="h4" color="white" fontWeight="bold" gutterBottom>
-        🛰 WeatherPulse India — Disaster Alert System
-      </Typography>
-      <Grid container spacing={3}>
-        <Grid size={{ xs: 12, sm: 4, md: 8, xl: 8 }}>
-          <Card sx={{ borderRadius: 3, display: "flex", gap: 2 }}>
-            <IndiaMap /> <AlertList />
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 4, md: 4, xl: 4 }}>
-          <WeatherWidget />
-        </Grid>
-      </Grid>
-    </Box>
+    <Suspense
+      fallback={
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100vh",
+            bgcolor: "background.default",
+          }}
+        >
+          <CircularProgress size={60} thickness={5} sx={{ color: "#2961ad" }} />
+        </Box>
+      }
+    >
+      <Routes>
+        {routes.map(({ path, element }) => (
+          <Route key={path} path={path} element={element} />
+        ))}
+      </Routes>
+    </Suspense>
   );
 };
+
 export default App;

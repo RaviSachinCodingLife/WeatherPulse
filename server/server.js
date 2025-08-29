@@ -8,25 +8,24 @@ const weatherService = require("./services/weatherService");
 const snsService = require("./services/snsService");
 const Alert = require("./models/Alert");
 const alertRouter = require("./routes/alerts");
+const authRouter = require("./routes/auth");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use("/api/alerts", alertRouter);
+app.use("/api/auth", authRouter);
 
-// Connect DB
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("Mongo connected"))
   .catch((err) => console.error("Mongo err", err));
 
-// history route
 app.get("/api/alerts", async (req, res) => {
   const items = await Alert.find().sort({ timestamp: -1 }).limit(200);
   res.json(items);
 });
 
-// subscription route (email/phone to SNS)
 app.post("/api/subscribe", async (req, res) => {
   const { protocol, endpoint } = req.body;
   try {
@@ -87,37 +86,26 @@ io.on("connection", (socket) => {
   console.log("socket connected", socket.id);
 });
 
-// broadcast helper
-function broadcastAlert(alert) {
-  io.emit("weather-alert", alert);
-}
+weatherService.onAlert(async (alert) => {
+  try {
+    if (alert.location?.coordinates) {
+      alert.location = {
+        type: "Point",
+        coordinates: [
+          alert.location.coordinates[0],
+          alert.location.coordinates[1],
+        ], 
+      };
+    }
 
-// listen for alerts from weatherService
-// weatherService.onAlert(async (alert) => {
-//   try {
-//     // save / update in DB
-//     await Alert.updateOne({ id: alert.id }, { $set: alert }, { upsert: true });
+    await Alert.updateOne({ id: alert.id }, { $set: alert }, { upsert: true });
 
-//     // publish to SNS
-//     if (process.env.SNS_TOPIC_ARN) {
-//       try {
-//         await snsService.publishAlert(alert);
-//       } catch (e) {
-//         console.error("sns pub err", e);
-//       }
-//     } else {
-//       console.log("SNS_TOPIC_ARN not set — skipping SNS publish");
-//     }
+    io.emit("weather-alert", alert);
+  } catch (dbErr) {
+    console.error("db save/upsert err", dbErr);
+  }
+});
 
-//     // broadcast to WS clients
-//     broadcastAlert(alert);
-//   } catch (dbErr) {
-//     console.error("db save/upsert err", dbErr);
-//   }
-// });
-
-// start polling weather + earthquakes
-weatherService.onAlert((alert) => io.emit("weather-alert", alert));
 weatherService.startPolling();
 
 const PORT = process.env.PORT || 4000;

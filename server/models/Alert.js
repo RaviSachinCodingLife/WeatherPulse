@@ -2,12 +2,24 @@ const mongoose = require("mongoose");
 
 const alertSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
-  type: String,
   title: String,
   description: String,
-  coords: [Number],
+  type: String,
   severity: Number,
-  timestamp: Date,
+  timestamp: { type: Date, default: Date.now },
+  // ✅ GeoJSON
+  location: {
+    type: {
+      type: String,
+      enum: ["Point"],
+      default: "Point",
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      index: "2dsphere",
+      required: true,
+    },
+  },
 });
 
 module.exports = mongoose.model("Alert", alertSchema);

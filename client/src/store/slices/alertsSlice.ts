@@ -1,35 +1,44 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-export interface Alert {
+export type AlertItem = {
   id: string;
   type: string;
   title: string;
-  description: string;
+  description?: string;
   coords?: [number, number];
   severity?: number;
   timestamp: string;
-}
-
-interface AlertsState {
-  items: Alert[];
-}
-
-const initialState: AlertsState = {
-  items: [],
 };
 
-export const alertsSlice = createSlice({
+type AlertsState = { items: AlertItem[] };
+
+const initialState: AlertsState = { items: [] };
+
+const alertsSlice = createSlice({
   name: "alerts",
   initialState,
   reducers: {
-    setAlerts: (state, action: PayloadAction<Alert[]>) => {
+    setAlerts(state, action: PayloadAction<AlertItem[]>) {
       state.items = action.payload;
     },
-    addAlert: (state, action: PayloadAction<Alert>) => {
-      state.items.push(action.payload);
+    addOrReplaceAlert(state, action: PayloadAction<AlertItem>) {
+      const a = action.payload;
+      // keep latest per state/title
+      const existsIndex = state.items.findIndex((x) => x.title === a.title);
+      if (existsIndex >= 0) {
+        state.items[existsIndex] = a;
+      } else {
+        state.items.unshift(a);
+        // keep limited
+        if (state.items.length > 200) state.items.pop();
+      }
+    },
+    clearAlerts(state) {
+      state.items = [];
     },
   },
 });
 
-export const { addAlert, setAlerts } = alertsSlice.actions;
+export const { setAlerts, addOrReplaceAlert, clearAlerts } =
+  alertsSlice.actions;
 export default alertsSlice.reducer;

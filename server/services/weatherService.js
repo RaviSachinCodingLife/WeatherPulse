@@ -243,6 +243,7 @@ function emitAlert({ type, title, description, lat, lon, severity }) {
     coords: [lat, lon],
     severity,
     timestamp: new Date().toISOString(),
+    location: { type: "Point", coordinates: [lon, lat] },
   };
   emitter.emit("alert", alert);
 }
@@ -284,7 +285,7 @@ function pollAlerts() {
 let intervalId = null;
 function startPolling(intervalMs = 10000) {
   if (intervalId) return;
-  pollAlerts(); // show all state alerts immediately on refresh
+  pollAlerts(); 
   intervalId = setInterval(pollAlerts, intervalMs);
   console.log("WeatherService polling started");
 }
