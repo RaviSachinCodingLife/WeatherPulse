@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { io, Socket } from "socket.io-client";
 import { useAppDispatch } from "../hooks/reduxHooks";
-import { addAlert } from "../store/slices/alertsSlice";
+// import { addAlert } from "../store/slices/alertsSlice";
 
 let socket: Socket | null = null;
 
@@ -19,12 +19,14 @@ export const useWebSocket = (
 
     socket.on("weather-alert", (payload: any) => {
       // payload should be our AlertItem
-      dispatch(addAlert(payload));
+      // dispatch(addAlert(payload));
+      console.log("working", payload);
     });
 
     socket.on("weather-update", (payload: any) => {
       // optional: partial update for many points (e.g., small marker updates)
       // you can dispatch to store if you keep a map of live points
+      console.log("working", payload);
     });
 
     return () => {
